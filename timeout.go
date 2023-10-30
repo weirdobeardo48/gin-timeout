@@ -4,23 +4,32 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"runtime/debug"
-	"time"
-
 	"github.com/gin-gonic/gin"
 	"github.com/vearne/gin-timeout/buffpool"
+	"net/http"
+	"runtime/debug"
+	"strconv"
+	"time"
 )
 
 var (
 	defaultOptions TimeoutOptions
 )
 
+const (
+	TIMEOUT_HEADER_KEY        = "x-service-timeout"
+	DEFAULT_TIMEOUT    uint64 = 5
+	MIN_TIMEOUT        uint64 = 2
+	MAX_TIMEOUT        uint64 = 50
+)
+
 func init() {
 	defaultOptions = TimeoutOptions{
 		CallBack:      nil,
 		DefaultMsg:    `{"code": -1, "msg":"http: Handler timeout"}`,
-		Timeout:       3 * time.Second,
+		Timeout:       5,
+		MaxTimeout:    50,
+		MinTimeout:    2,
 		ErrorHttpCode: http.StatusServiceUnavailable,
 	}
 }
@@ -44,11 +53,24 @@ func Timeout(opts ...Option) gin.HandlerFunc {
 			// Call the option giving the instantiated
 			opt(tw)
 		}
+		serviceTimeout := tw.Timeout
+		// Check for dynamic timeout config from header
+		serviceTimeoutFromHeaderString := c.GetHeader(TIMEOUT_HEADER_KEY)
+		serviceTimeout, errParse := strconv.ParseUint(serviceTimeoutFromHeaderString, 10, 64)
+		if errParse == nil {
+			if serviceTimeout > MAX_TIMEOUT {
+				serviceTimeout = MAX_TIMEOUT
+			} else {
+				if serviceTimeout < MIN_TIMEOUT {
+					serviceTimeout = MIN_TIMEOUT
+				}
+			}
+		}
 
 		cp.Writer = tw
 
 		// wrap the request context with a timeout
-		ctx, cancel := context.WithTimeout(cp.Request.Context(), tw.Timeout)
+		ctx, cancel := context.WithTimeout(cp.Request.Context(), time.Duration(serviceTimeout)*time.Second)
 		defer cancel()
 
 		cp.Request = cp.Request.WithContext(ctx)

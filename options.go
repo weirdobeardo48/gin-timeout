@@ -2,7 +2,6 @@ package timeout
 
 import (
 	"net/http"
-	"time"
 )
 
 type CallBackFunc func(*http.Request)
@@ -11,11 +10,13 @@ type Option func(*TimeoutWriter)
 type TimeoutOptions struct {
 	CallBack      CallBackFunc
 	DefaultMsg    interface{}
-	Timeout       time.Duration
+	Timeout       uint64
+	MaxTimeout    uint64
+	MinTimeout    uint64
 	ErrorHttpCode int
 }
 
-func WithTimeout(d time.Duration) Option {
+func WithTimeout(d uint64) Option {
 	return func(t *TimeoutWriter) {
 		t.Timeout = d
 	}
