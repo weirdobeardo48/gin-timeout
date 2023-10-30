@@ -14,6 +14,7 @@ type TimeoutOptions struct {
 	MaxTimeout    uint64
 	MinTimeout    uint64
 	ErrorHttpCode int
+	CustomHeader  map[string][]string
 }
 
 func WithTimeout(d uint64) Option {

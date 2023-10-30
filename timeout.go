@@ -105,6 +105,11 @@ func Timeout(opts ...Option) gin.HandlerFunc {
 			defer tw.mu.Unlock()
 
 			tw.timedOut = true
+			dst := tw.ResponseWriter.Header()
+			for k, vv := range tw.CustomHeader {
+				dst[k] = vv
+			}
+			
 			tw.ResponseWriter.WriteHeader(tw.ErrorHttpCode)
 
 			n, err = tw.ResponseWriter.Write(encodeBytes(tw.DefaultMsg))
@@ -133,6 +138,7 @@ func Timeout(opts ...Option) gin.HandlerFunc {
 			}
 
 			tw.ResponseWriter.WriteHeader(tw.code)
+
 			if b := buffer.Bytes(); len(b) > 0 {
 				if _, err = tw.ResponseWriter.Write(b); err != nil {
 					panic(err)
