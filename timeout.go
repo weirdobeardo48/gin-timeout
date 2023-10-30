@@ -53,10 +53,11 @@ func Timeout(opts ...Option) gin.HandlerFunc {
 			// Call the option giving the instantiated
 			opt(tw)
 		}
-		serviceTimeout := tw.Timeout
 		// Check for dynamic timeout config from header
+		serviceTimeout := DEFAULT_TIMEOUT
+		var errParse error
 		serviceTimeoutFromHeaderString := c.GetHeader(TIMEOUT_HEADER_KEY)
-		serviceTimeout, errParse := strconv.ParseUint(serviceTimeoutFromHeaderString, 10, 64)
+		serviceTimeout, errParse = strconv.ParseUint(serviceTimeoutFromHeaderString, 10, 64)
 		if errParse == nil {
 			if serviceTimeout > MAX_TIMEOUT {
 				serviceTimeout = MAX_TIMEOUT
@@ -65,6 +66,8 @@ func Timeout(opts ...Option) gin.HandlerFunc {
 					serviceTimeout = MIN_TIMEOUT
 				}
 			}
+		} else {
+			serviceTimeout = tw.Timeout
 		}
 
 		cp.Writer = tw
