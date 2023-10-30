@@ -23,6 +23,15 @@ func WithTimeout(d uint64) Option {
 	}
 }
 
+func WithCustomHeader(k string, v []string) Option {
+	return func(t *TimeoutWriter) {
+		if t.CustomHeader == nil {
+			t.CustomHeader = make(map[string][]string)
+		}
+		t.CustomHeader[k] = v
+	}
+}
+
 // Optional parameters
 func WithErrorHttpCode(code int) Option {
 	return func(t *TimeoutWriter) {

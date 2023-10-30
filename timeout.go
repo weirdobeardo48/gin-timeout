@@ -109,7 +109,7 @@ func Timeout(opts ...Option) gin.HandlerFunc {
 			for k, vv := range tw.CustomHeader {
 				dst[k] = vv
 			}
-			
+
 			tw.ResponseWriter.WriteHeader(tw.ErrorHttpCode)
 
 			n, err = tw.ResponseWriter.Write(encodeBytes(tw.DefaultMsg))
