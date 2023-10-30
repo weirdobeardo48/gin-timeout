@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	timeout "github.com/vearne/gin-timeout"
+	timeout "github.com/weirdobeardo48/gin-timeout"
 )
 
 func main() {

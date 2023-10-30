@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/vearne/gin-timeout/buffpool"
+	"github.com/weirdobeardo48/gin-timeout/buffpool"
 	"net/http"
 	"runtime/debug"
 	"strconv"
