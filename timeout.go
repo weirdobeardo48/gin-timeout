@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/weirdobeardo48/gin-timeout/buffpool"
 	"net/http"
 	"runtime/debug"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/weirdobeardo48/gin-timeout/buffpool"
 )
 
 var (
@@ -21,6 +22,8 @@ const (
 	DEFAULT_TIMEOUT    uint64 = 5
 	MIN_TIMEOUT        uint64 = 2
 	MAX_TIMEOUT        uint64 = 50
+
+	INFINITY_TIMEOUT_HEADER_VALUE = "inf"
 )
 
 func init() {
@@ -57,6 +60,11 @@ func Timeout(opts ...Option) gin.HandlerFunc {
 		serviceTimeout := DEFAULT_TIMEOUT
 		var errParse error
 		serviceTimeoutFromHeaderString := c.GetHeader(TIMEOUT_HEADER_KEY)
+		if serviceTimeoutFromHeaderString == INFINITY_TIMEOUT_HEADER_VALUE && tw.AllowInfinityTimeout {
+			c.Next()
+			return
+		}
+
 		serviceTimeout, errParse = strconv.ParseUint(serviceTimeoutFromHeaderString, 10, 64)
 		if errParse == nil {
 			if serviceTimeout > MAX_TIMEOUT {

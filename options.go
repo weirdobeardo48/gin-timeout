@@ -8,13 +8,14 @@ type CallBackFunc func(*http.Request)
 type Option func(*TimeoutWriter)
 
 type TimeoutOptions struct {
-	CallBack      CallBackFunc
-	DefaultMsg    interface{}
-	Timeout       uint64
-	MaxTimeout    uint64
-	MinTimeout    uint64
-	ErrorHttpCode int
-	CustomHeader  map[string][]string
+	CallBack             CallBackFunc
+	DefaultMsg           interface{}
+	Timeout              uint64
+	MaxTimeout           uint64
+	MinTimeout           uint64
+	ErrorHttpCode        int
+	CustomHeader         map[string][]string
+	AllowInfinityTimeout bool
 }
 
 func WithTimeout(d uint64) Option {
@@ -50,5 +51,11 @@ func WithDefaultMsg(resp interface{}) Option {
 func WithCallBack(f CallBackFunc) Option {
 	return func(t *TimeoutWriter) {
 		t.CallBack = f
+	}
+}
+
+func WithAllowInfinityTimeoutFlag(allowInfinityTimeout bool) Option {
+	return func(t *TimeoutWriter) {
+		t.AllowInfinityTimeout = allowInfinityTimeout
 	}
 }
