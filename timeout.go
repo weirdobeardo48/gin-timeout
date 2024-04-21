@@ -76,6 +76,10 @@ func Timeout(opts ...Option) gin.HandlerFunc {
 			}
 		} else {
 			serviceTimeout = tw.Timeout
+			if tw.TimeoutConfig != nil {
+				endpoint := c.Request.URL.String()
+				serviceTimeout = tw.TimeoutConfig.GetTimeoutByEndpoint(endpoint)
+			}
 		}
 
 		cp.Writer = tw

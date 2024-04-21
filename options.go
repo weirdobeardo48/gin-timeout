@@ -7,6 +7,10 @@ import (
 type CallBackFunc func(*http.Request)
 type Option func(*TimeoutWriter)
 
+type TimeoutConfig interface {
+	GetTimeoutByEndpoint(endpoint string) uint64
+}
+
 type TimeoutOptions struct {
 	CallBack             CallBackFunc
 	DefaultMsg           interface{}
@@ -16,6 +20,7 @@ type TimeoutOptions struct {
 	ErrorHttpCode        int
 	CustomHeader         map[string][]string
 	AllowInfinityTimeout bool
+	TimeoutConfig        TimeoutConfig
 }
 
 func WithTimeout(d uint64) Option {
@@ -57,5 +62,11 @@ func WithCallBack(f CallBackFunc) Option {
 func WithAllowInfinityTimeoutFlag(allowInfinityTimeout bool) Option {
 	return func(t *TimeoutWriter) {
 		t.AllowInfinityTimeout = allowInfinityTimeout
+	}
+}
+
+func WithTimeoutConfig(timeoutConfig TimeoutConfig) Option {
+	return func(t *TimeoutWriter) {
+		t.TimeoutConfig = timeoutConfig
 	}
 }
