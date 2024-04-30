@@ -59,34 +59,42 @@ func Timeout(opts ...Option) gin.HandlerFunc {
 		// Check for dynamic timeout config from header
 		serviceTimeout := DEFAULT_TIMEOUT
 		var errParse error
+		var ctx context.Context
+		var cancel context.CancelFunc
+
 		serviceTimeoutFromHeaderString := c.GetHeader(TIMEOUT_HEADER_KEY)
+		shouldIgnoreServiceTimeoutValue := false
 		if serviceTimeoutFromHeaderString == INFINITY_TIMEOUT_HEADER_VALUE && tw.AllowInfinityTimeout {
-			c.Next()
-			return
+			shouldIgnoreServiceTimeoutValue = true
 		}
 
-		serviceTimeout, errParse = strconv.ParseUint(serviceTimeoutFromHeaderString, 10, 64)
-		if errParse == nil {
-			if serviceTimeout > MAX_TIMEOUT {
-				serviceTimeout = MAX_TIMEOUT
+		if shouldIgnoreServiceTimeoutValue {
+			ctx = c.Request.Context()
+		}
+
+		if !shouldIgnoreServiceTimeoutValue {
+			serviceTimeout, errParse = strconv.ParseUint(serviceTimeoutFromHeaderString, 10, 64)
+			if errParse == nil {
+				if serviceTimeout > MAX_TIMEOUT {
+					serviceTimeout = MAX_TIMEOUT
+				} else {
+					if serviceTimeout < MIN_TIMEOUT {
+						serviceTimeout = MIN_TIMEOUT
+					}
+				}
 			} else {
-				if serviceTimeout < MIN_TIMEOUT {
-					serviceTimeout = MIN_TIMEOUT
+				serviceTimeout = tw.Timeout
+				if tw.TimeoutConfig != nil {
+					endpoint := c.Request.URL.String()
+					serviceTimeout = tw.TimeoutConfig.GetTimeoutByEndpoint(endpoint)
 				}
 			}
-		} else {
-			serviceTimeout = tw.Timeout
-			if tw.TimeoutConfig != nil {
-				endpoint := c.Request.URL.String()
-				serviceTimeout = tw.TimeoutConfig.GetTimeoutByEndpoint(endpoint)
-			}
+			// wrap the request context with a timeout
+			ctx, cancel = context.WithTimeout(cp.Request.Context(), time.Duration(serviceTimeout)*time.Second)
+			defer cancel()
 		}
 
 		cp.Writer = tw
-
-		// wrap the request context with a timeout
-		ctx, cancel := context.WithTimeout(cp.Request.Context(), time.Duration(serviceTimeout)*time.Second)
-		defer cancel()
 
 		cp.Request = cp.Request.WithContext(ctx)
 
